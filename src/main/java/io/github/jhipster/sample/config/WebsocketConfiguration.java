@@ -1,22 +1,29 @@
 package io.github.jhipster.sample.config;
 
-import io.github.jhipster.sample.security.AuthoritiesConstants;
-
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.server.*;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.socket.WebSocketHandler;
-import org.springframework.web.socket.config.annotation.*;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 import io.github.jhipster.config.JHipsterProperties;
+import io.github.jhipster.sample.security.AuthoritiesConstants;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -25,14 +32,32 @@ public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer 
     public static final String IP_ADDRESS = "IP_ADDRESS";
 
     private final JHipsterProperties jHipsterProperties;
+    
+    private final ApplicationProperties applicationProperties;
+    
 
-    public WebsocketConfiguration(JHipsterProperties jHipsterProperties) {
+    public WebsocketConfiguration(JHipsterProperties jHipsterProperties, ApplicationProperties applicationProperties) {
         this.jHipsterProperties = jHipsterProperties;
+        this.applicationProperties = applicationProperties;
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic");
+//        config.enableSimpleBroker("/topic");
+    	// update method name
+        config.enableStompBrokerRelay("/topic")
+            // load connection settings for the stomp broker
+            .setRelayHost(applicationProperties.getStompBroker().getUrl())
+            .setRelayPort(applicationProperties.getStompBroker().getPort())
+            // login for backend channels
+            .setSystemLogin(applicationProperties.getStompBroker().getUsername())
+            .setSystemPasscode(applicationProperties.getStompBroker().getPassword())
+            // login for user channels
+            .setClientLogin(applicationProperties.getStompBroker().getUsername())
+            .setClientPasscode(applicationProperties.getStompBroker().getPassword());
+
+        // required for RabbitMQ only
+        config.setPathMatcher(new AntPathMatcher("."));    	
     }
 
     @Override

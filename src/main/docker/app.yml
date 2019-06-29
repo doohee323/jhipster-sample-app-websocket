@@ -3,14 +3,36 @@ services:
   jhipsterwebsocketsampleapplication-app:
     image: jhipsterwebsocketsampleapplication
     environment:
-      - _JAVA_OPTIONS=-Xmx512m -Xms256m
       - SPRING_PROFILES_ACTIVE=prod,swagger
-      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true
       - SPRING_DATASOURCE_URL=jdbc:mysql://jhipsterwebsocketsampleapplication-mysql:3306/jhipsterwebsocketsampleapplication?useUnicode=true&characterEncoding=utf8&useSSL=false
-      - JHIPSTER_SLEEP=30 # gives time for other services to boot before the application
+      - JHIPSTER_SLEEP=10 # gives time for the database to boot before the application
+      # override the default rabbitmq config
+      - APPLICATION_STOMP_BROKER_URL=rabbitmq
+      - APPLICATION_STOMP_BROKER_USERNAME=rabbitmq-username
+      - APPLICATION_STOMP_BROKER_PASSWORD=rabbitmq-password
     ports:
       - 8080:8080
+  jhipsterwebsocketsampleapplication-app2:
+    image: jhipsterwebsocketsampleapplication
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,swagger
+      - SPRING_DATASOURCE_URL=jdbc:mysql://jhipsterwebsocketsampleapplication-mysql:3306/jhipsterwebsocketsampleapplication?useUnicode=true&characterEncoding=utf8&useSSL=false
+      - JHIPSTER_SLEEP=10 # gives time for the database to boot before the application
+      # override the default rabbitmq config
+      - APPLICATION_STOMP_BROKER_URL=rabbitmq
+      - APPLICATION_STOMP_BROKER_USERNAME=rabbitmq-username
+      - APPLICATION_STOMP_BROKER_PASSWORD=rabbitmq-password
+    ports:
+      - 8081:8080
   jhipsterwebsocketsampleapplication-mysql:
     extends:
       file: mysql.yml
       service: jhipsterwebsocketsampleapplication-mysql
+  rabbitmq:
+    extends:
+      file: rabbitmq.yml
+      service: rabbitmq
+    environment:
+      # set a custom username/password for rabbitmq
+      - RABBITMQ_DEFAULT_USER=rabbitmq-username
+      - RABBITMQ_DEFAULT_PASS=rabbitmq-password
